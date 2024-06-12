@@ -2,6 +2,7 @@ package br.com.weslei.bender.webfluxcourse.controller;
 
 import br.com.weslei.bender.webfluxcourse.model.request.UserRequest;
 import br.com.weslei.bender.webfluxcourse.model.response.UserResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +16,7 @@ import reactor.core.publisher.Mono;
 public interface UserController {
 
     @PostMapping
-    ResponseEntity<Mono<Void>> save(@RequestBody UserRequest request);
+    ResponseEntity<Mono<Void>> save(@Valid @RequestBody UserRequest request);
 
     @GetMapping(value = "/{id}")
     ResponseEntity<Mono<UserResponse>> find(@PathVariable String id);
