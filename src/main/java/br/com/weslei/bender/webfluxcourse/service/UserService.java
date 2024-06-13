@@ -7,6 +7,7 @@ import br.com.weslei.bender.webfluxcourse.repository.UserRepository;
 import br.com.weslei.bender.webfluxcourse.service.exception.ObjectNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static java.lang.String.format;
@@ -29,5 +30,15 @@ public class UserService {
                                 format("Object not found. Id: %s, Type: %s ", id, User.class.getSimpleName())
                         )
                 ));
+    }
+
+    public Flux<User> findAll(){
+        return userRepository.findAll();
+    }
+
+    public Mono<User> update(final String id, final UserRequest request) {
+        return findById(id)
+                .map(entity ->mapper.toEntity(request, entity))
+                .flatMap(userRepository::save);
     }
 }
