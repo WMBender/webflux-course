@@ -1,6 +1,7 @@
 package br.com.weslei.bender.webfluxcourse.controller.impl;
 
 import br.com.weslei.bender.webfluxcourse.controller.UserController;
+import br.com.weslei.bender.webfluxcourse.mapper.UserMapper;
 import br.com.weslei.bender.webfluxcourse.model.request.UserRequest;
 import br.com.weslei.bender.webfluxcourse.model.response.UserResponse;
 import br.com.weslei.bender.webfluxcourse.service.UserService;
@@ -18,6 +19,7 @@ import reactor.core.publisher.Mono;
 public class UserControllerImpl implements UserController {
 
     private final UserService service;
+    private final UserMapper mapper;
 
     @Override
     public ResponseEntity<Mono<Void>> save(UserRequest request) {
@@ -27,7 +29,11 @@ public class UserControllerImpl implements UserController {
 
     @Override
     public ResponseEntity<Mono<UserResponse>> find(String id) {
-        return null;
+
+        return  ResponseEntity.ok().body(
+                service.findById(id).map(mapper::toResponse)
+        );
+
     }
 
     @Override
