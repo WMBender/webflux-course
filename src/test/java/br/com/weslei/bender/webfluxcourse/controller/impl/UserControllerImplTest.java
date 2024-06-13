@@ -5,6 +5,7 @@ import br.com.weslei.bender.webfluxcourse.mapper.UserMapper;
 import br.com.weslei.bender.webfluxcourse.model.request.UserRequest;
 import br.com.weslei.bender.webfluxcourse.model.response.UserResponse;
 import br.com.weslei.bender.webfluxcourse.service.UserService;
+import br.com.weslei.bender.webfluxcourse.service.exception.ObjectNotFoundException;
 import com.mongodb.reactivestreams.client.MongoClient;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,6 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -170,6 +171,26 @@ class UserControllerImplTest {
     }
 
     @Test
+    @DisplayName("Test find by id endpoint with not found user")
+    void findWithNotFound() {
+
+        when(service.findById(anyString())).thenReturn(Mono.error(
+                new ObjectNotFoundException("Object not found. Id: 123, Type: User")
+        ));
+
+        webTestClient.get().uri("/users/" + ID)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.path").isEqualTo("/users/" + ID)
+                .jsonPath("$.status").isEqualTo(NOT_FOUND.value())
+                .jsonPath("$.error").isEqualTo("Not Found")
+                .jsonPath("$.message").isEqualTo("Object not found. Id: 123, Type: User");
+
+    }
+
+    @Test
     @DisplayName("Test find all endpoint with success")
     void findAllWithSuccess() {
         final var userResponse = new UserResponse(ID, NAME, EMAIL, PASSWORD);
@@ -218,6 +239,27 @@ class UserControllerImplTest {
     }
 
     @Test
+    @DisplayName("Test update endpoint with not found")
+    void updateWithNotFound() {
+        UserRequest request = new UserRequest(NAME, EMAIL, PASSWORD);
+
+        when(service.update(anyString(), any(UserRequest.class))).thenReturn(Mono.error(
+                new ObjectNotFoundException("Object not found. Id: 123, Type: User")
+        ));
+
+        webTestClient.patch().uri("/users/" + ID)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.path").isEqualTo("/users/" + ID)
+                .jsonPath("$.status").isEqualTo(NOT_FOUND.value())
+                .jsonPath("$.error").isEqualTo("Not Found")
+                .jsonPath("$.message").isEqualTo("Object not found. Id: 123, Type: User");
+
+    }
+
+    @Test
     @DisplayName("Test delete endpoint with success")
     void deleteWithSuccess() {
 
@@ -228,5 +270,23 @@ class UserControllerImplTest {
                 .expectStatus().isOk();
 
         verify(service).delete(ID);
+    }
+
+    @Test
+    @DisplayName("Test delete endpoint with not found")
+    void deleteWithNotFound() {
+
+        when(service.delete(ID)).thenReturn(Mono.error(
+                new ObjectNotFoundException("Object not found. Id: 123, Type: User")
+        ));
+
+        webTestClient.delete().uri("/users/" + ID)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.path").isEqualTo("/users/" + ID)
+                .jsonPath("$.status").isEqualTo(NOT_FOUND.value())
+                .jsonPath("$.error").isEqualTo("Not Found")
+                .jsonPath("$.message").isEqualTo("Object not found. Id: 123, Type: User");
     }
 }
